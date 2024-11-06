@@ -1,10 +1,22 @@
 package com.riyanto.repositorysiswa.frame;
 
+import com.riyanto.repositorysiswa.model.Siswa;
+import com.riyanto.repositorysiswa.repository.SiswaRepo;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 
 public class SiswaFrame extends javax.swing.JFrame {
 
+    private final SiswaRepo siswaRepo;
+    private List<Siswa> siswaList;
+    
     public SiswaFrame() {
         initComponents();
+        siswaRepo = new SiswaRepo();
+        
+        tampilSemuaSiswa();
     }
 
     @SuppressWarnings("unchecked")
@@ -45,10 +57,25 @@ public class SiswaFrame extends javax.swing.JFrame {
         jScrollPane1.setViewportView(txtAlamat);
 
         btnSimpan.setText("Simpan");
+        btnSimpan.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSimpanActionPerformed(evt);
+            }
+        });
 
         btnHapus.setText("Hapus");
+        btnHapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHapusActionPerformed(evt);
+            }
+        });
 
         btnBatal.setText("Batal");
+        btnBatal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBatalActionPerformed(evt);
+            }
+        });
 
         tblSiswa.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -59,6 +86,11 @@ public class SiswaFrame extends javax.swing.JFrame {
             }
         ));
         tblSiswa.getTableHeader().setReorderingAllowed(false);
+        tblSiswa.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblSiswaMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tblSiswa);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -136,6 +168,84 @@ public class SiswaFrame extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimpanActionPerformed
+        // TODO add your handling code here:
+        String nis = txtNis.getText();
+        String nama = txtNama.getText();
+        String jk = cmbJk.getSelectedItem().toString().substring(0, 1);
+        String alamat = txtAlamat.getText();
+        
+        // tambahkan validasi disini
+        
+        
+        Siswa siswa = new Siswa(nis, nama, jk, alamat);
+        
+        
+        if(btnSimpan.getText().equals("Simpan")) {
+            
+            boolean simpan = siswaRepo.addSiswa(siswa);
+            if(simpan) {
+                JOptionPane.showMessageDialog(this, "Data siswa berhasil disimpan");
+            } else {
+                JOptionPane.showMessageDialog(this, "Data gagal disimpan");
+            }
+        } 
+        else {
+            boolean ubah = siswaRepo.updateSiswa(siswa);
+            if(ubah) {
+                JOptionPane.showMessageDialog(this, "Data siswa berhasil diubah");
+            } else {
+                JOptionPane.showMessageDialog(this, "Data gagal diubah");
+            }
+        }
+        
+        tampilSemuaSiswa();
+        resetUI();
+    }//GEN-LAST:event_btnSimpanActionPerformed
+
+    private void tblSiswaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSiswaMouseClicked
+        // TODO add your handling code here:
+        int baris = tblSiswa.getSelectedRow();
+        Siswa siswa = siswaList.get(baris);
+        
+        txtNis.setText(siswa.getNis());
+        txtNis.setEditable(false);
+        
+        txtNama.setText(siswa.getNama());
+        
+        if(siswa.getJk().equals("L")) {
+            cmbJk.setSelectedItem("Laki-laki");
+        } else {
+            cmbJk.setSelectedItem("Perempuan");
+        }
+        
+        txtAlamat.setText(siswa.getAlamat());
+        
+        btnSimpan.setText("Ubah");
+        btnHapus.setEnabled(true);
+    }//GEN-LAST:event_tblSiswaMouseClicked
+
+    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
+        // TODO add your handling code here:
+        int baris = tblSiswa.getSelectedRow();
+        Siswa siswa = siswaList.get(baris);
+        
+        boolean hapus = siswaRepo.deleteSiswa(siswa);
+        if(hapus) {
+            JOptionPane.showMessageDialog(this, "Data siswa berhasil dihapus");
+        } else {
+            JOptionPane.showMessageDialog(this, "Data siswa gagal dihapus");
+        }
+        
+        tampilSemuaSiswa();
+        resetUI();
+    }//GEN-LAST:event_btnHapusActionPerformed
+
+    private void btnBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBatalActionPerformed
+        // TODO add your handling code here:
+        resetUI();
+    }//GEN-LAST:event_btnBatalActionPerformed
+
    
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -162,10 +272,8 @@ public class SiswaFrame extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new SiswaFrame().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new SiswaFrame().setVisible(true);
         });
     }
 
@@ -186,5 +294,37 @@ public class SiswaFrame extends javax.swing.JFrame {
     private javax.swing.JTextField txtNama;
     private javax.swing.JTextField txtNis;
     // End of variables declaration//GEN-END:variables
+
+    private void tampilSemuaSiswa() {
+        siswaList = siswaRepo.getAllSiswa();
+        
+        String[] columns = {"NIS", "Nama Siswa", "Jenis Kelamin", "Alamat"};
+        Object[][] data  = new Object[siswaList.size()][columns.length];
+        
+        for(int i=0; i<siswaList.size(); i++) {
+            data[i][0] = siswaList.get(i).getNis();
+            data[i][1] = siswaList.get(i).getNama();
+            data[i][2] = siswaList.get(i).getJk().equals("L") ? "Laki-laki" : "Perempuan";
+            data[i][3] = siswaList.get(i).getAlamat();
+        }
+        
+        DefaultTableModel model = new DefaultTableModel(data, columns);
+        tblSiswa.setModel(model);
+        
+        // reset ke default
+        resetUI();
+    }
+
+    private void resetUI() {
+        txtNis.setText(null);
+        txtNis.setEditable(true);
+        txtNis.requestFocus();
+        txtNama.setText(null);
+        cmbJk.setSelectedIndex(0);
+        txtAlamat.setText(null);
+        
+        btnSimpan.setText("Simpan");
+        btnHapus.setEnabled(false);
+    }
 
 }
